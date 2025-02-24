@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-// Interrupt frame for x86_64
+// Interrupt frame structure
 typedef struct {
     uint64_t r15, r14, r13, r12, r11, r10, r9, r8;
     uint64_t rdi, rsi, rbp, rsp, rbx, rdx, rcx, rax;
@@ -12,10 +12,8 @@ typedef struct {
 } interrupt_frame_t;
 
 // Function declarations
-extern void interrupt_handler(interrupt_frame_t* frame);
-extern void timer_handler(interrupt_frame_t* frame);
-
-// Get current system ticks
+void interrupt_handler(interrupt_frame_t* frame);
+void timer_handler(interrupt_frame_t* frame);
 uint64_t get_system_ticks(void);
 
 #endif // INTERRUPT_H

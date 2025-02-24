@@ -118,9 +118,14 @@ $(KERNEL_BUILD_DIR)/%.o: $(KERNEL_DIR)/%.c
 
 # Add assembly files to kernel objects
 KERNEL_ASM_SOURCES = $(wildcard $(KERNEL_DIR)/hardware/*.asm)
-KERNEL_ASM_OBJECTS = $(KERNEL_ASM_SOURCES:.asm=.o)
+KERNEL_ASM_OBJECTS = $(patsubst %.asm,$(BUILD_DIR)/%.o,$(KERNEL_ASM_SOURCES))
 
 KERNEL_OBJECTS += $(KERNEL_ASM_OBJECTS)
+
+# Add assembly compilation rule
+$(BUILD_DIR)/%.o: %.asm
+	@mkdir -p $(dir $@)
+	$(NASM) $(NASM_FLAGS) $< -o $@
 
 # AI Core rules
 ai-core: $(AI_TARGET)
@@ -151,3 +156,44 @@ build-bootloader: bootloader
 build-kernel: kernel
 build-ai: ai-core
 build-ui: ui
+
+# NASM settings for Windows
+NASM = nasm
+NASM_FLAGS = -f win64
+
+# Fix assembly paths and objects
+KERNEL_ASM_SOURCES = $(wildcard $(KERNEL_DIR)/hardware/*.asm)
+KERNEL_ASM_OBJECTS = $(KERNEL_ASM_SOURCES:$(KERNEL_DIR)/%.asm=$(KERNEL_BUILD_DIR)/%.o)
+
+# Clear previous KERNEL_OBJECTS definition
+KERNEL_OBJECTS = 
+
+# Add C source files
+KERNEL_C_SOURCES = $(wildcard $(KERNEL_DIR)/core/*.c) \
+                  $(wildcard $(KERNEL_DIR)/memory/*.c) \
+                  $(wildcard $(KERNEL_DIR)/process/*.c) \
+                  $(wildcard $(KERNEL_DIR)/filesystem/*.c) \
+                  $(wildcard $(KERNEL_DIR)/hardware/*.c)
+
+KERNEL_C_OBJECTS = $(KERNEL_C_SOURCES:$(KERNEL_DIR)/%.c=$(KERNEL_BUILD_DIR)/%.o)
+
+# Add assembly sources
+KERNEL_ASM_SOURCES = $(wildcard $(KERNEL_DIR)/hardware/*.asm)
+KERNEL_ASM_OBJECTS = $(KERNEL_ASM_SOURCES:$(KERNEL_DIR)/%.asm=$(KERNEL_BUILD_DIR)/%.o)
+
+# Combine all objects
+KERNEL_OBJECTS = $(KERNEL_C_OBJECTS) $(KERNEL_ASM_OBJECTS)
+
+# Single kernel build rule
+$(BIN_DIR)/kernel.bin: $(KERNEL_OBJECTS)
+	$(CC) $(KERNEL_CFLAGS) $(KERNEL_LDFLAGS) -T $(KERNEL_DIR)/linker.ld $^ -o $@
+
+# C source compilation rule
+$(KERNEL_BUILD_DIR)/%.o: $(KERNEL_DIR)/%.c
+	@if [ ! -d "$(dir $@)" ]; then mkdir -p "$(dir $@)"; fi
+	$(CC) $(KERNEL_CFLAGS) -c $< -o $@
+
+# Assembly compilation rule
+$(KERNEL_BUILD_DIR)/%.o: $(KERNEL_DIR)/%.asm
+	@if [ ! -d "$(dir $@)" ]; then mkdir -p "$(dir $@)"; fi
+	$(NASM) $(NASM_FLAGS) -o $@ $<
