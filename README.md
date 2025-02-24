@@ -1,7 +1,7 @@
 # AI-Driven OS Project Structure
 
 ## Core Components
-
+```
 /
 ├── bootloader/           # UEFI + Legacy BIOS bootloader
 ├── kernel/              # Monolithic kernel source
@@ -18,7 +18,7 @@
     ├── shell/         # Shell implementation
     ├── desktop/       # Desktop environment
     └── themes/        # Theming system
-
+```
 
 ## Key Features Structure
 - AI System Management
