@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "hardware.h": "c"
+        "hardware.h": "c",
+        "kernel.h": "c"
     }
 }

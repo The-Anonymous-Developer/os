@@ -5,9 +5,6 @@
 #define KERNEL_VERSION "0.0.1"
 #define KERNEL_NAME "SYSTEM"
 
-// Hardware initialization function
-void init_hardware(void);
-
 // Other kernel functions
 void kernel_main(void);
 void init_memory_manager(void);

@@ -18,7 +18,8 @@ KERNEL_BUILD_DIR=$(BUILD_DIR)/kernel
 KERNEL_CFLAGS = -Wall -Wextra -ffreestanding -fno-stack-protector \
     -mno-red-zone -mno-mmx -mno-sse -mno-sse2 \
     -mcmodel=kernel -target x86_64-pc-none-elf \
-    -fms-extensions -nostdlib -masm=intel
+    -fms-extensions -nostdlib -masm=intel \
+    -fno-pie -static
 
 # Kernel sources and objects
 KERNEL_SOURCES = $(wildcard $(KERNEL_DIR)/core/*.c) \
@@ -42,7 +43,8 @@ AI_LOCAL=$(wildcard $(AI_CORE_DIR)/local/*.cpp)
 AI_CLOUD=$(wildcard $(AI_CORE_DIR)/cloud/*.cpp)
 AI_MODELS=$(wildcard $(AI_CORE_DIR)/models/*.cpp)
 AI_SOURCES=$(AI_LOCAL) $(AI_CLOUD) $(AI_MODELS)
-AI_OBJECTS=$(AI_SOURCES:.cpp=.o)
+AI_SOURCES = $(wildcard $(AI_CORE_DIR)/*/*.cpp)
+AI_OBJECTS = $(AI_SOURCES:%.cpp=$(BUILD_DIR)/%.o)
 AI_TARGET=$(BIN_DIR)/ai-core.bin
 
 # UI settings
@@ -75,6 +77,12 @@ BINDIR = $(BUILDDIR)/bin
 SOURCES = $(wildcard $(SRCDIR)/*.c)
 OBJECTS = $(SOURCES:%.c=$(BUILDDIR)/%.o)
 
+# Linker flags
+LDFLAGS = -nostdlib -no-pie -static
+
+# Update linker flags for kernel
+KERNEL_LDFLAGS = -nostdlib -static -Wl,-no-pie
+
 .PHONY: all clean bootloader kernel drivers ai-core ui
 
 all: create-dirs bootloader kernel drivers ai-core ui
@@ -102,17 +110,28 @@ $(BOOTLOADER_TARGET): $(BOOTLOADER_OBJECTS)
 kernel: $(BIN_DIR)/kernel.bin
 
 $(BIN_DIR)/kernel.bin: $(KERNEL_OBJECTS)
-	$(CC) $(KERNEL_CFLAGS) -T $(KERNEL_DIR)/linker.ld $^ -o $@
+	$(CC) $(KERNEL_CFLAGS) $(KERNEL_LDFLAGS) -T $(KERNEL_DIR)/linker.ld $^ -o $@
 
 $(KERNEL_BUILD_DIR)/%.o: $(KERNEL_DIR)/%.c
 	@-mkdir "$(dir $@)" 2>NUL
 	$(CC) $(KERNEL_CFLAGS) -c $< -o $@
 
+# Add assembly files to kernel objects
+KERNEL_ASM_SOURCES = $(wildcard $(KERNEL_DIR)/hardware/*.asm)
+KERNEL_ASM_OBJECTS = $(KERNEL_ASM_SOURCES:.asm=.o)
+
+KERNEL_OBJECTS += $(KERNEL_ASM_OBJECTS)
+
 # AI Core rules
 ai-core: $(AI_TARGET)
 
 $(AI_TARGET): $(AI_OBJECTS)
-	$(CXX) $(CXX_FLAGS) $^ -o $@
+	@mkdir -p "$(dir $@)"
+	$(CXX) $(CXX_FLAGS) $^ -o $@ 
+
+$(BUILD_DIR)/%.o: %.cpp
+	@if not exist "$(dir $@)" mkdir "$(dir $@)"
+	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
 # UI rules
 ui: $(UI_TARGET)

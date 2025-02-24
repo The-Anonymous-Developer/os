@@ -3,7 +3,7 @@ OUTPUT_FORMAT(elf64-x86-64)
 
 SECTIONS
 {
-    . = 1M;
+    . = 0xffffffff80000000;
 
     .text BLOCK(4K) : ALIGN(4K)
     {

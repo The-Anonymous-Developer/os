@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "../kernel.h"
+#include "../hardware/hardware.h"
 
 
 // Function declarations
