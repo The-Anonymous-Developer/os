@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "proc_mgmt.h"
 
 typedef struct {
     uint32_t pid;

@@ -15,6 +15,7 @@
         "resource.h": "c",
         "cpu.h": "c",
         "interrupt.h": "c",
-        "stdbool.h": "c"
+        "stdbool.h": "c",
+        "scheduler.h": "c"
     }
 }

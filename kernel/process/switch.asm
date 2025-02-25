@@ -31,3 +31,5 @@ task_switch:
     pop rbp
 
     ret
+
+; .section .note.GNU-stack,"",@progbits

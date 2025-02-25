@@ -4,6 +4,7 @@
 #include "../lib/string.h"
 #include "../hardware/cpu.h"
 
+
 // Keyboard buffer
 static char keyboard_buffer[KEYBOARD_BUFFER_SIZE];
 static uint16_t buffer_start = 0;
@@ -94,12 +95,6 @@ void keyboard_handler(uint8_t scancode) {
     if (c) {
         keyboard_buffer_put(c);
     }
-}
-
-void keyboard_handler_wrapper(struct interrupt_frame* frame) {
-    (void)frame;
-    uint8_t scancode = inb(0x60);  // Read from keyboard port
-    keyboard_handler(scancode);
 }
 
 char keyboard_getchar(void) {
