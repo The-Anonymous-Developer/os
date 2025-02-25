@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include "resource_defs.h"
 
 #define MAX_RESOURCES 64
 #define RESOURCE_ALERT_THRESHOLD 80  // 80% usage triggers alert

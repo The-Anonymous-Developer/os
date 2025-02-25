@@ -1,9 +1,10 @@
 #include "resource_stats.h"
 #include "../hardware/display.h"
+#include "../hardware/timer.h"
 #include "../lib/string.h"
 #include <stddef.h>
 
-// Define the stats array (no longer static)
+// Global stats array
 resource_stats_t stats[MAX_RESOURCES];
 
 void resource_stats_init(void) {
@@ -16,10 +17,10 @@ void resource_stats_init(void) {
         stats[i].current_usage = 0;
         stats[i].peak_usage = 0;
         stats[i].alert_triggered = false;
-        stats[i].history.head = 0;
-        stats[i].history.count = 0;
         stats[i].sample_interval = 100;  // Sample every 100 ticks
         stats[i].last_sample_time = 0;
+        stats[i].history.head = 0;
+        stats[i].history.count = 0;
     }
     display_write("Resource statistics tracking initialized\n");
 }
@@ -67,15 +68,35 @@ void resource_stats_check_alerts(void) {
 }
 
 void resource_stats_acquire(uint32_t resource_id, uint32_t wait_time) {
-    if (resource_id < MAX_RESOURCES) {
-        stats[resource_id].acquisitions++;
-        stats[resource_id].wait_time += wait_time;
+    if (resource_id >= MAX_RESOURCES) return;
+    
+    resource_stats_t* stat = &stats[resource_id];
+    stat->acquisitions++;
+    stat->wait_time += wait_time;
+    
+    // Update current usage
+    stat->current_usage++;
+    if (stat->current_usage > stat->peak_usage) {
+        stat->peak_usage = stat->current_usage;
+    }
+    
+    // Update history if sampling interval has passed
+    uint32_t current_time = get_system_ticks();
+    if (current_time - stat->last_sample_time >= stat->sample_interval) {
+        resource_stats_update_history(resource_id);
+        stat->last_sample_time = current_time;
     }
 }
 
 void resource_stats_release(uint32_t resource_id, uint32_t hold_time) {
-    if (resource_id < MAX_RESOURCES) {
-        stats[resource_id].hold_time += hold_time;
+    if (resource_id >= MAX_RESOURCES) return;
+    
+    resource_stats_t* stat = &stats[resource_id];
+    stat->hold_time += hold_time;
+    
+    // Update current usage
+    if (stat->current_usage > 0) {
+        stat->current_usage--;
     }
 }
 

@@ -11,6 +11,7 @@
         "stddef.h": "c",
         "stdint.h": "c",
         "resource_predict.h": "c",
-        "resource_stats.h": "c"
+        "resource_stats.h": "c",
+        "resource.h": "c"
     }
 }

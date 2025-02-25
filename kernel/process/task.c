@@ -15,6 +15,23 @@ task_t* current_task = NULL;  // Changed from static to global
 static uint32_t next_task_id = 0;
 static uint32_t task_count = 0;
 
+// State transition table
+static const bool state_transitions[7][7] = {
+    //CRE  RDY  RUN  BLK  SLP  ZOM  DEAD
+    { 0,   1,   0,   0,   0,   0,   0   }, // FROM: CREATED
+    { 0,   0,   1,   0,   1,   0,   0   }, // FROM: READY
+    { 0,   1,   0,   1,   1,   1,   0   }, // FROM: RUNNING
+    { 0,   1,   0,   0,   0,   1,   0   }, // FROM: BLOCKED
+    { 0,   1,   0,   0,   0,   1,   0   }, // FROM: SLEEPING
+    { 0,   0,   0,   0,   0,   0,   1   }, // FROM: ZOMBIE
+    { 0,   0,   0,   0,   0,   0,   0   }  // FROM: DEAD
+};
+
+static const char* state_names[] = {
+    "CREATED", "READY", "RUNNING", "BLOCKED", 
+    "SLEEPING", "ZOMBIE", "DEAD"
+};
+
 void task_init(void) {
     task_count = 0;
     next_task_id = 0;
@@ -187,4 +204,72 @@ task_t* task_current(void) {
 
 void task_yield(void) {
     task_schedule();
+}
+
+bool task_can_transition(task_state_t from, task_state_t to) {
+    return state_transitions[from][to];
+}
+
+const char* task_state_name(task_state_t state) {
+    return state_names[state];
+}
+
+void task_set_state(task_t* task, task_state_t new_state) {
+    // Disable interrupts during state change
+    #ifdef _MSC_VER
+        __asm { cli }
+    #else
+        __asm__ __volatile__ ("cli" ::: "memory");
+    #endif
+
+    task_state_t old_state = task->state;
+    
+    if (task_can_transition(old_state, new_state)) {
+        task->state = new_state;
+        
+        // Update scheduler statistics
+        if (new_state == TASK_RUNNING) {
+            task->run_start_time = get_system_ticks();
+        } else if (old_state == TASK_RUNNING) {
+            task->total_runtime += get_system_ticks() - task->run_start_time;
+        }
+    }
+
+    // Re-enable interrupts
+    #ifdef _MSC_VER
+        __asm { sti }
+    #else
+        __asm__ __volatile__ ("sti" ::: "memory");
+    #endif
+}
+
+void task_exit(int exit_code) {
+    task_t* current = task_current();
+    
+    // Disable interrupts during cleanup
+    #ifdef _MSC_VER
+        __asm { cli }
+    #else
+        __asm__ __volatile__ ("cli" ::: "memory");
+    #endif
+
+    current->exit_code = exit_code;
+    task_set_state(current, TASK_ZOMBIE);
+
+    // Release all held resources
+    resource_release_all(current);
+
+    // Wake up parent if it's waiting
+    if (current->parent && current->parent->state == TASK_BLOCKED) {
+        task_set_state(current->parent, TASK_READY);
+    }
+
+    // Re-enable interrupts and yield
+    #ifdef _MSC_VER
+        __asm { sti }
+    #else
+        __asm__ __volatile__ ("sti" ::: "memory");
+    #endif
+
+    task_yield();  // Never returns
 }
