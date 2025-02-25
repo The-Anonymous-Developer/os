@@ -35,7 +35,7 @@ KERNEL_DEPS = hardware.o
 
 # Bootloader settings
 BOOTLOADER_SOURCES = $(wildcard $(BOOTLOADER_DIR)/*.asm)
-BOOTLOADER_OBJECTS = $(BOOTLOADER_SOURCES:%.asm=%.o)
+BOOTLOADER_OBJECTS = $(BOOTLOADER_SOURCES:%.asm=$(BUILD_DIR)/%.obj)
 BOOTLOADER_TARGET = $(BIN_DIR)/bootloader.efi
 
 # AI Core settings
@@ -101,9 +101,10 @@ create-dirs:
 bootloader: $(BOOTLOADER_TARGET)
 
 $(BOOTLOADER_TARGET): $(BOOTLOADER_OBJECTS)
-	$(LD) /subsystem:efi_application /entry:EfiMain $^ /out:$@
+	$(LD) /subsystem:efi_application /entry:EfiMain /out:$@ $^
 
-%.o: %.asm
+$(BUILD_DIR)/%.obj: %.asm
+	@if not exist "$(dir $@)" mkdir "$(dir $@)"
 	$(NASM) -f win64 $< -o $@
 
 # Kernel rules
@@ -206,3 +207,18 @@ $(KERNEL_BUILD_DIR)/%.o: $(KERNEL_DIR)/%.asm
 
 %.o: %.asm
 	nasm -f elf64 -o $@ $<
+
+# C source compilation rule
+$(KERNEL_BUILD_DIR)/%.o: $(KERNEL_DIR)/%.c
+	-mkdir $(subst /,/,$(dir $@)) 2>NUL
+	$(CC) $(KERNEL_CFLAGS) -c $< -o $@
+
+# Assembly compilation rule
+$(KERNEL_BUILD_DIR)/%.o: $(KERNEL_DIR)/%.asm
+	-mkdir $(subst /,/,$(dir $@)) 2>NUL
+	$(NASM) $(NASM_FLAGS) -o $@ $<
+
+# Bootloader object rule
+$(BUILD_DIR)/%.obj: %.asm
+	-mkdir $(subst /,/,$(dir $@)) 2>NUL
+	$(NASM) -f win64 $< -o $@

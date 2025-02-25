@@ -119,3 +119,49 @@ int sprintf_simple(char* str, const char* format, ...) {
     *s = '\0';
     return s - str;
 }
+
+int string_format(char* buffer, const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    
+    char* str = buffer;
+    char num_buf[32];
+    
+    for (const char* fmt = format; *fmt; fmt++) {
+        if (*fmt != '%') {
+            *str++ = *fmt;
+            continue;
+        }
+        
+        fmt++;
+        switch (*fmt) {
+            case 'd': {
+                int val = va_arg(args, int);
+                int i = 0;
+                if (val < 0) {
+                    *str++ = '-';
+                    val = -val;
+                }
+                do {
+                    num_buf[i++] = '0' + (val % 10);
+                    val /= 10;
+                } while (val);
+                while (i > 0) {
+                    *str++ = num_buf[--i];
+                }
+                break;
+            }
+            case 's': {
+                char* s = va_arg(args, char*);
+                while (*s) {
+                    *str++ = *s++;
+                }
+                break;
+            }
+        }
+    }
+    
+    va_end(args);
+    *str = '\0';
+    return str - buffer;
+}
