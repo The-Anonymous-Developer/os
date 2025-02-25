@@ -12,6 +12,7 @@
         "stdint.h": "c",
         "resource_predict.h": "c",
         "resource_stats.h": "c",
-        "resource.h": "c"
+        "resource.h": "c",
+        "cpu.h": "c"
     }
 }

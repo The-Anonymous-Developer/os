@@ -1,40 +1,54 @@
 #include "paging.h"
 #include "heap.h"
 #include "../hardware/cpu.h"
+#include "../hardware/display.h"
+#include "../include/kernel.h"
 
 #define PAGE_SIZE 4096
 #define ENTRIES_PER_TABLE 512
+#define TABLE_MASK (~0xFFFULL)
 
-// Page table structures
-static pml4_entry_t* pml4_table = NULL;
+static page_entry_t* pml4_table = NULL;
 
-static void* allocate_page(void) {
+static void* allocate_zeroed_page(void) {
     void* page = heap_alloc(PAGE_SIZE);
-    if (page) {
-        memset(page, 0, PAGE_SIZE);
+    if (!page) {
+        return NULL;
     }
+    memset(page, 0, PAGE_SIZE);
     return page;
 }
 
-void paging_init(void) {
-    // Allocate PML4 table
-    pml4_table = allocate_page();
+error_t paging_init(void) {
+    if (pml4_table != NULL) {
+        return ERR_INVALID_PARAM;  // Already initialized
+    }
+
+    pml4_table = allocate_zeroed_page();
     if (!pml4_table) {
         display_write("Failed to allocate PML4 table\n");
-        return;
+        return ERR_OUT_OF_MEMORY;
     }
 
     // Identity map first 2MB
+    error_t status;
     for (uint64_t addr = 0; addr < 0x200000; addr += PAGE_SIZE) {
-        paging_map_page((void*)addr, (void*)addr, PAGE_PRESENT | PAGE_WRITABLE);
+        status = paging_map_page((void*)addr, (void*)addr, 
+                               PAGE_PRESENT | PAGE_WRITABLE);
+        if (status != SUCCESS) {
+            return status;
+        }
     }
 
-    // Load PML4 into CR3
-    uint64_t pml4_phys = (uint64_t)paging_get_physical_address(pml4_table);
-    write_cr3(pml4_phys);
+    write_cr3((uint64_t)pml4_table);
+    return SUCCESS;
 }
 
-void* paging_map_page(void* virt_addr, void* phys_addr, uint64_t flags) {
+error_t paging_map_page(void* virt_addr, void* phys_addr, uint64_t flags) {
+    if (!virt_addr || !phys_addr || !pml4_table) {
+        return ERR_NULL_POINTER;
+    }
+
     uint64_t addr = (uint64_t)virt_addr;
     uint64_t pml4_index = (addr >> 39) & 0x1FF;
     uint64_t pdpt_index = (addr >> 30) & 0x1FF;
@@ -44,37 +58,37 @@ void* paging_map_page(void* virt_addr, void* phys_addr, uint64_t flags) {
     // Traverse/create PML4 entry
     pdpt_entry_t* pdpt;
     if (!(pml4_table[pml4_index] & PAGE_PRESENT)) {
-        pdpt = allocate_page();
-        if (!pdpt) return NULL;
+        pdpt = allocate_zeroed_page();
+        if (!pdpt) return ERR_OUT_OF_MEMORY;
         pml4_table[pml4_index] = ((uint64_t)pdpt) | flags;
     } else {
-        pdpt = (pdpt_entry_t*)(pml4_table[pml4_index] & ~0xFFF);
+        pdpt = (pdpt_entry_t*)(pml4_table[pml4_index] & TABLE_MASK);
     }
 
     // Traverse/create PDPT entry
     pd_entry_t* pd;
     if (!(pdpt[pdpt_index] & PAGE_PRESENT)) {
-        pd = allocate_page();
-        if (!pd) return NULL;
+        pd = allocate_zeroed_page();
+        if (!pd) return ERR_OUT_OF_MEMORY;
         pdpt[pdpt_index] = ((uint64_t)pd) | flags;
     } else {
-        pd = (pd_entry_t*)(pdpt[pdpt_index] & ~0xFFF);
+        pd = (pd_entry_t*)(pdpt[pdpt_index] & TABLE_MASK);
     }
 
     // Traverse/create PD entry
     pt_entry_t* pt;
     if (!(pd[pd_index] & PAGE_PRESENT)) {
-        pt = allocate_page();
-        if (!pt) return NULL;
+        pt = allocate_zeroed_page();
+        if (!pt) return ERR_OUT_OF_MEMORY;
         pd[pd_index] = ((uint64_t)pt) | flags;
     } else {
-        pt = (pt_entry_t*)(pd[pd_index] & ~0xFFF);
+        pt = (pt_entry_t*)(pd[pd_index] & TABLE_MASK);
     }
 
     // Set page table entry
     pt[pt_index] = ((uint64_t)phys_addr) | flags;
-
-    return virt_addr;
+    
+    return SUCCESS;
 }
 
 void* paging_get_physical_address(void* virt_addr) {

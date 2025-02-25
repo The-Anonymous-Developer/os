@@ -11,6 +11,7 @@ void init_process_manager(void){
 }
 
 int create_process(const char* name) {
-    // create a new process
-    return 0; // dummy return tbc
+    (void)name;  // Mark as intentionally unused
+    // TODO: Implement process creation
+    return -1;
 }

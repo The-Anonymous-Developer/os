@@ -14,6 +14,8 @@ ALIGNED(8) static uint8_t kernel_heap[HEAP_SIZE];
 static size_t heap_ptr = 0;
 
 void* kmalloc(size_t size) {
+    if (size == 0) return NULL;
+    
     // Align size to 8 bytes
     size = (size + 7) & ~7;
     

@@ -186,6 +186,7 @@ KERNEL_ASM_SOURCES = $(wildcard $(KERNEL_DIR)/hardware/*.asm)
 KERNEL_ASM_SOURCES += $(KERNEL_DIR)/process/switch.asm
 KERNEL_ASM_SOURCES += kernel/hardware/ports_asm.asm
 KERNEL_ASM_SOURCES += kernel/hardware/cpu_asm.asm
+KERNEL_ASM_SOURCES += $(KERNEL_DIR)/hardware/cpu_asm.asm
 KERNEL_ASM_OBJECTS = $(KERNEL_ASM_SOURCES:$(KERNEL_DIR)/%.asm=$(KERNEL_BUILD_DIR)/%.o)
 
 # Combine all objects

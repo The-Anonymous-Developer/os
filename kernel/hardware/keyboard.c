@@ -1,87 +1,121 @@
 #include "keyboard.h"
-#include "hardware.h"
-
-// Keyboard state
-static int shift_pressed = 0;
-
-// Scan code to ASCII mapping
-static const char scancode_ascii[] = {
-    0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b',
-    '\t', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',
-    0, 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`',
-    0, '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0,
-    '*', 0, ' '
-};
-
-// Shifted scan code to ASCII mapping
-static const char scancode_ascii_shifted[] = {
-    0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '\b',
-    '\t', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n',
-    0, 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', '~',
-    0, '|', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 0,
-    '*', 0, ' '
-};
+#include "ports.h"
+#include "../hardware/interrupt.h"
+#include "../lib/string.h"
 
 // Keyboard buffer
 static char keyboard_buffer[KEYBOARD_BUFFER_SIZE];
-static volatile uint16_t buffer_start = 0;
-static volatile uint16_t buffer_end = 0;
+static uint16_t buffer_start = 0;
+static uint16_t buffer_end = 0;
+static bool shift_pressed = false;
+static bool caps_lock = false;
 
-// Initialize keyboard
-void keyboard_init(void) {
-    buffer_start = 0;
-    buffer_end = 0;
-    shift_pressed = 0;
-}
+// Keyboard map for non-shifted keys
+static const char keyboard_map[128] = {
+    0,   // Error code
+    27,  // Escape
+    '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=',
+    '\b', // Backspace
+    '\t', // Tab
+    'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',
+    0,   // Control
+    'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`',
+    0,   // Left shift
+    '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/',
+    0,   // Right shift
+    '*', // Numeric keypad
+    0,   // Alt
+    ' ', // Space
+    0,   // Caps lock
+    0,   // F1
+    0,   // F2-F10 omitted for brevity
+};
 
-// Check if there are characters in the buffer
-bool keyboard_available(void) {
-    return buffer_start != buffer_end;
-}
+// Keyboard map for shifted keys
+static const char keyboard_map_shifted[128] = {
+    0,
+    27,
+    '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+',
+    '\b',
+    '\t',
+    'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n',
+    0,
+    'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', '~',
+    0,
+    '|', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?',
+    0,
+    '*',
+    0,
+    ' ',
+    0,
+    0,
+};
 
-// Get a character from the buffer
-char keyboard_getchar(void) {
-    if (!keyboard_available()) {
-        return 0;
-    }
-
-    char c = keyboard_buffer[buffer_start];
-    buffer_start = (buffer_start + 1) % KEYBOARD_BUFFER_SIZE;
-    return c;
-}
-
-// Add a character to the buffer
-static void keyboard_putchar(char c) {
+static void keyboard_buffer_put(char c) {
     uint16_t next = (buffer_end + 1) % KEYBOARD_BUFFER_SIZE;
-    
-    // Only add if buffer isn't full
-    if (next != buffer_start && c != 0) {
+    if (next != buffer_start) {
         keyboard_buffer[buffer_end] = c;
         buffer_end = next;
     }
 }
 
 void keyboard_handler(uint8_t scancode) {
-    // Handle key release (bit 7 set)
-    if (scancode & 0x80) {
-        scancode &= 0x7F;  // Clear bit 7
+    if (scancode & 0x80) {  // Key release
+        scancode &= 0x7F;   // Clear release bit
         if (scancode == KEY_LSHIFT || scancode == KEY_RSHIFT) {
-            shift_pressed = 0;
+            shift_pressed = false;
         }
         return;
     }
 
-    // Handle key press
+    // Key press
     if (scancode == KEY_LSHIFT || scancode == KEY_RSHIFT) {
-        shift_pressed = 1;
+        shift_pressed = true;
         return;
     }
 
-    // Convert scancode to ASCII
-    char ascii = shift_pressed ? 
-                scancode_ascii_shifted[scancode] : 
-                scancode_ascii[scancode];
+    if (scancode == KEY_CAPS) {
+        caps_lock = !caps_lock;
+        return;
+    }
 
-    // Add to keyboard buffer
-    keyboard_putchar(ascii);
+    char c;
+    if (shift_pressed) {
+        c = keyboard_map_shifted[scancode];
+    } else {
+        c = keyboard_map[scancode];
+    }
+
+    if (caps_lock && c >= 'a' && c <= 'z') {
+        c = c - 'a' + 'A';
+    }
+
+    if (c) {
+        keyboard_buffer_put(c);
+    }
+}
+
+char keyboard_getchar(void) {
+    while (buffer_start == buffer_end) {
+        // Wait for character
+        halt();
+    }
+    char c = keyboard_buffer[buffer_start];
+    buffer_start = (buffer_start + 1) % KEYBOARD_BUFFER_SIZE;
+    return c;
+}
+
+bool keyboard_has_char(void) {
+    return buffer_start != buffer_end;
+}
+
+bool keyboard_available(void) {
+    return buffer_start != buffer_end;
+}
+
+void keyboard_init(void) {
+    register_interrupt_handler(33, keyboard_handler);  // IRQ1 = 33
+    buffer_start = buffer_end = 0;
+    shift_pressed = false;
+    caps_lock = false;
 }

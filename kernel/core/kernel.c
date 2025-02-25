@@ -22,15 +22,14 @@ extern void init_memory_manager(void);
 extern void init_process_manager(void);
 extern void init_hardware(void);
 
-// Kernel entry point
+// Kernel entry point alignment
 #ifdef _MSC_VER
-    #define KERNEL_ENTRY __declspec(align(16))
+    #define KERNEL_ENTRY void __declspec(align(16))
 #else
-    #define KERNEL_ENTRY __attribute__((aligned(16)))
+    #define KERNEL_ENTRY void __attribute__((aligned(16)))
 #endif
 
-KERNEL_ENTRY
-void _start(void) {
+KERNEL_ENTRY _start(void) {
     // Disable interrupts during initialization
     #ifdef _MSC_VER
         __asm {
@@ -64,8 +63,8 @@ void kernel_main(void) {
         __asm {
             sti
         }
-    #else
-        asm volatile ("sti");
+    // #else
+    //     asm volatile ("sti");
     #endif
     
     // Main kernel loop

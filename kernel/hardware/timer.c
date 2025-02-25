@@ -13,6 +13,11 @@ static volatile uint32_t timer_ticks = 0;
 #define PIT_CHANNEL2 0x42
 #define PIT_COMMAND  0x43
 
+// PIT command byte bits
+#define PIT_MODE2   0x34    // Rate Generator
+#define PIT_MODE3   0x36    // Square Wave Generator
+#define PIT_LATCH   0x00    // Latch command
+
 void timer_handler(interrupt_frame_t* frame) {
     (void)frame;  // Unused parameter
     timer_ticks++;
@@ -27,7 +32,7 @@ void timer_init(void) {
     uint16_t divisor = TIMER_DIVIDER;
     
     // Set up PIT channel 0 in rate generator mode
-    outb(PIT_COMMAND, 0x36);   // Channel 0, Rate Generator mode
+    outb(PIT_COMMAND, PIT_MODE2);              // Channel 0, Rate Generator mode
     outb(PIT_CHANNEL0, divisor & 0xFF);        // Low byte
     outb(PIT_CHANNEL0, (divisor >> 8) & 0xFF); // High byte
     

@@ -11,11 +11,13 @@ void init_memory_manager(void){
     // mem mgmt init
 }
 
-void* allocate_memory(size_t size){
-    // basic memory allocate
-    return (void*)0; // dummy return tbc
+void* allocate_memory(size_t size) {
+    if (size == 0) return NULL;
+    // TODO: Implement memory allocation
+    return NULL;
 }
 
-void free_memory(void* ptr){
-    // mem deallocation
+void free_memory(void* ptr) {
+    if (!ptr) return;
+    // TODO: Implement memory deallocation
 }

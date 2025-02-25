@@ -1,0 +1,7 @@
+#ifndef RESOURCE_DEFS_H
+#define RESOURCE_DEFS_H
+
+#define MAX_RESOURCES 256
+#define MAX_RESOURCE_NAME 32
+
+#endif // RESOURCE_DEFS_H

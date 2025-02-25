@@ -1,6 +1,11 @@
 #ifndef TASK_H
 #define TASK_H
 
+#include "../include/kernel.h"
+#include "../hardware/timer.h"
+#include "../memory/memory.h"
+#include "../lib/string.h"
+
 #include <stdint.h>
 #include <stdbool.h>
 #include "message_types.h"
