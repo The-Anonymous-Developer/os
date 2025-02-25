@@ -1,6 +1,8 @@
+#include "idt.h"
 #include "hardware.h"
 #include "interrupt.h"
-#include <stddef.h>  // For NULL definition
+#include "timer.h"
+#include <stddef.h>
 
 #define IDT_ENTRIES 256
 
@@ -37,6 +39,9 @@ extern void interrupt_stub_28(void);
 extern void interrupt_stub_29(void);
 extern void interrupt_stub_30(void);
 extern void interrupt_stub_31(void);
+
+// Forward declaration of the helper function
+static void set_idt_entry(uint8_t vector, uint64_t handler);
 
 // Define complete array of handlers with fixed size
 static void (*interrupt_handlers[32])(void) = {
@@ -90,36 +95,35 @@ void init_idt(void) {
     // Set up CPU exception handlers
     for (int i = 0; i < 32; i++) {
         uint64_t handler = (uint64_t)interrupt_handlers[i];
-        idt[i].base_low = (uint16_t)(handler & 0xFFFF);
-        idt[i].base_middle = (uint16_t)((handler >> 16) & 0xFFFF);
-        idt[i].base_high = (uint32_t)((handler >> 32) & 0xFFFFFFFF);
-        idt[i].selector = 0x08;  // Kernel code segment
-        idt[i].ist = 0;
-        idt[i].flags = 0x8E;     // Present, Ring 0, Interrupt Gate
-        idt[i].reserved = 0;
+        set_idt_entry(i, handler);
     }
 
     // Set up timer interrupt (IRQ0)
-    uint64_t timer = (uint64_t)timer_handler;
-    idt[32].base_low = (uint16_t)(timer & 0xFFFF);
-    idt[32].base_middle = (uint16_t)((timer >> 16) & 0xFFFF);
-    idt[32].base_high = (uint32_t)((timer >> 32) & 0xFFFFFFFF);
-    idt[32].selector = 0x08;  // Kernel code segment
-    idt[32].ist = 0;
-    idt[32].flags = 0x8E;     // Present, Ring 0, Interrupt Gate
-    idt[32].reserved = 0;
+    extern void timer_handler(interrupt_frame_t*);  // Declare external handler
+    set_idt_entry(32, (uint64_t)timer_handler);
 
-    // Load IDT using cross-platform assembly
+    // Load IDT
     #ifdef _MSC_VER
-        ASM {
+        __asm {
             lidt [idtp]
         }
-    #else
-        // ASM (
-        //     "lidt %0"
-        //     : 
-        //     : "m"(idtp)
-        //     : "memory"
-        // );
+    // #else
+    //     __asm__ volatile (
+    //         "lidt %0"
+    //         : 
+    //         : "m"(idtp)
+    //         : "memory"
+    //     );
     #endif
+}
+
+static void set_idt_entry(uint8_t vector, uint64_t handler) {
+// Helper function to set IDT entries
+    idt[vector].base_low = (uint16_t)(handler & 0xFFFF);
+    idt[vector].base_middle = (uint16_t)((handler >> 16) & 0xFFFF);
+    idt[vector].base_high = (uint32_t)((handler >> 32) & 0xFFFFFFFF);
+    idt[vector].selector = 0x08;  // Kernel code segment
+    idt[vector].ist = 0;
+    idt[vector].flags = 0x8E;     // Present, Ring 0, Interrupt Gate
+    idt[vector].reserved = 0;
 }

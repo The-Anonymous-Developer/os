@@ -1,8 +1,13 @@
 #include "hardware.h"
 #include "interrupt.h"
+#include "ports.h"
+#include "pic.h"
+#include "display.h"
+#include "../lib/string.h"
+#include "idt.h"
 
 // System tick counter for timer interrupts
-volatile uint64_t system_ticks = 0;
+static volatile uint64_t system_ticks = 0;
 
 // Exception messages for debugging
 static const char* exception_messages[] = {
@@ -40,37 +45,53 @@ static const char* exception_messages[] = {
 };
 
 // Timer interrupt handler
-void timer_handler(interrupt_frame_t* frame) {
+static void timer_handler(interrupt_frame_t* frame) {
+    (void)frame;  // Silence unused parameter warning
     system_ticks++;
-    
-    // Send EOI to PIC
-    outb(0x20, 0x20);
+}
+
+// Array of interrupt handlers
+static interrupt_handler_t interrupt_handlers[256] = { 0 };
+
+void register_interrupt_handler(uint8_t vector, interrupt_handler_t handler) {
+    if (vector < 256) {
+        interrupt_handlers[vector] = handler;
+    }
 }
 
 void interrupt_handler(interrupt_frame_t* frame) {
-    // Handle CPU exceptions (0-31)
-    if (frame->interrupt_number < 32) {
-        // Handle CPU exception
-        // TODO: Add proper error handling and recovery
-        for(;;); // Halt for now
-    }
-    // Handle timer interrupt (IRQ0 = 32)
-    else if (frame->interrupt_number == 32) {
-        timer_handler(frame);
-    }
-    // Handle keyboard interrupt (IRQ1 = 33)
-    else if (frame->interrupt_number == 33) {
-        // Read keyboard scan code
-        uint8_t scancode = inb(0x60);
+    if (frame->interrupt_number < 256 && interrupt_handlers[frame->interrupt_number]) {
+        interrupt_handlers[frame->interrupt_number](frame);
+    } else if (frame->interrupt_number < 32) {
+        // Handle CPU exceptions
+        display_write("Exception: ");
+        display_write(exception_messages[frame->interrupt_number]);
+        display_write("\nError Code: ");
         
-        // TODO: Add keyboard handling
+        char error_code_str[32];
+        sprintf_simple(error_code_str, "%x", frame->error_code);
+        display_write(error_code_str);
+        display_write("\n");
         
-        // Send EOI to PIC
-        outb(0x20, 0x20);
+        // Halt on exceptions for debugging
+        for(;;);
+    } else {
+        // Handle IRQs
+        uint8_t irq = frame->interrupt_number - IRQ_BASE;
+        
+        // Process IRQ
+        switch(irq) {
+            case 0:  // Timer
+                timer_handler(frame);
+                break;
+            case 1:  // Keyboard
+                keyboard_handler(inb(0x60));
+                break;
+            default:
+                break;
+        }
+        
+        // Send EOI
+        pic_send_eoi(irq);
     }
-}
-
-// Get current system ticks (for timing)
-uint64_t get_system_ticks(void) {
-    return system_ticks;
 }

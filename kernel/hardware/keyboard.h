@@ -2,8 +2,11 @@
 #define KEYBOARD_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
-// Keyboard scan codes (basic set)
+#define KEYBOARD_BUFFER_SIZE 256
+
+// Key definitions
 #define KEY_ESC          0x01
 #define KEY_ENTER        0x1C
 #define KEY_SPACE        0x39
@@ -13,6 +16,8 @@
 
 // Function declarations
 void keyboard_handler(uint8_t scancode);
-char scancode_to_ascii(uint8_t scancode);
+char keyboard_getchar(void);
+bool keyboard_available(void);
+void keyboard_init(void);
 
 #endif // KEYBOARD_H

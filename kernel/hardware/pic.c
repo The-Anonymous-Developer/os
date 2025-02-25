@@ -1,55 +1,86 @@
-#include "hardware.h"
+#include "pic.h"
+#include "ports.h"
+#include "cpu.h"
 
 #define PIC1_COMMAND 0x20
 #define PIC1_DATA    0x21
 #define PIC2_COMMAND 0xA0
 #define PIC2_DATA    0xA1
 
-static inline void io_wait(void) {
-    #ifdef _MSC_VER
-        ASM {
-            xor al, al
-            out 0x80, al
-        }
-    // #else
-    //     ASM ("outb %0, $0x80" : : "a"(0));
-    #endif
-}
+#define PIC1_OFFSET 0x20
+#define PIC2_OFFSET 0x28
+
+static uint16_t pic1_mask = 0xFFFF;
+static uint16_t pic2_mask = 0xFFFF;
 
 void init_pic(void) {
     // Save masks
     uint8_t mask1 = inb(PIC1_DATA);
     uint8_t mask2 = inb(PIC2_DATA);
 
-    // Start initialization sequence
-    outb(PIC1_COMMAND, 0x11);
-    io_wait();
-    outb(PIC2_COMMAND, 0x11);
+    // Initialize both PICs
+    outb(PIC1_COMMAND, ICW1_INIT | ICW1_ICW4);
+    io_wait();  // Using io_wait from ports.h
+    outb(PIC2_COMMAND, ICW1_INIT | ICW1_ICW4);
     io_wait();
 
     // Set vector offsets
-    outb(PIC1_DATA, 0x20);
+    outb(PIC1_DATA, PIC1_OFFSET);
     io_wait();
-    outb(PIC2_DATA, 0x28);
+    outb(PIC2_DATA, PIC2_OFFSET);
     io_wait();
 
-    // Tell PICs about each other
+    // Tell Master PIC there is a slave
     outb(PIC1_DATA, 4);
     io_wait();
     outb(PIC2_DATA, 2);
     io_wait();
 
-    // Set 8086/88 mode
-    outb(PIC1_DATA, 0x01);
+    // Set 8086 mode
+    outb(PIC1_DATA, ICW4_8086);
     io_wait();
-    outb(PIC2_DATA, 0x01);
+    outb(PIC2_DATA, ICW4_8086);
     io_wait();
 
-    // Restore masks
+    // Restore saved masks
     outb(PIC1_DATA, mask1);
     outb(PIC2_DATA, mask2);
+}
 
-    // Mask all interrupts except timer (IRQ0)
-    outb(PIC1_DATA, ~0x01);  // Enable only IRQ0
-    outb(PIC2_DATA, 0xFF);   // Disable all IRQs on slave PIC
+void pic_mask_irq(uint8_t irq) {
+    uint16_t port;
+    uint8_t value;
+
+    if (irq < 8) {
+        port = PIC1_DATA;
+        value = inb(port) | (1 << irq);
+        pic1_mask = value;
+    } else {
+        port = PIC2_DATA;
+        value = inb(port) | (1 << (irq - 8));
+        pic2_mask = value;
+    }
+    outb(port, value);
+}
+
+void pic_unmask_irq(uint8_t irq) {
+    uint16_t port;
+    uint8_t value;
+
+    if (irq < 8) {
+        port = PIC1_DATA;
+        value = inb(port) & ~(1 << irq);
+        pic1_mask = value;
+    } else {
+        port = PIC2_DATA;
+        value = inb(port) & ~(1 << (irq - 8));
+        pic2_mask = value;
+    }
+    outb(port, value);
+}
+
+void pic_send_eoi(uint8_t irq) {
+    if (irq >= 8)
+        outb(PIC2_COMMAND, 0x20);
+    outb(PIC1_COMMAND, 0x20);
 }

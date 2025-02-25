@@ -175,10 +175,16 @@ KERNEL_C_SOURCES = $(wildcard $(KERNEL_DIR)/core/*.c) \
                   $(wildcard $(KERNEL_DIR)/filesystem/*.c) \
                   $(wildcard $(KERNEL_DIR)/hardware/*.c)
 
+KERNEL_C_SOURCES += kernel/lib/string.c \
+    kernel/memory/memory.c
+
 KERNEL_C_OBJECTS = $(KERNEL_C_SOURCES:$(KERNEL_DIR)/%.c=$(KERNEL_BUILD_DIR)/%.o)
 
 # Add assembly sources
 KERNEL_ASM_SOURCES = $(wildcard $(KERNEL_DIR)/hardware/*.asm)
+KERNEL_ASM_SOURCES += $(KERNEL_DIR)/process/switch.asm
+KERNEL_ASM_SOURCES += kernel/hardware/ports_asm.asm
+KERNEL_ASM_SOURCES += kernel/hardware/cpu_asm.asm
 KERNEL_ASM_OBJECTS = $(KERNEL_ASM_SOURCES:$(KERNEL_DIR)/%.asm=$(KERNEL_BUILD_DIR)/%.o)
 
 # Combine all objects
@@ -197,3 +203,6 @@ $(KERNEL_BUILD_DIR)/%.o: $(KERNEL_DIR)/%.c
 $(KERNEL_BUILD_DIR)/%.o: $(KERNEL_DIR)/%.asm
 	@if [ ! -d "$(dir $@)" ]; then mkdir -p "$(dir $@)"; fi
 	$(NASM) $(NASM_FLAGS) -o $@ $<
+
+%.o: %.asm
+	nasm -f elf64 -o $@ $<

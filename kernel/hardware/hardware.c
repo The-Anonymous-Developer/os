@@ -1,13 +1,16 @@
 #include <stdint.h>
 #include "hardware.h"
+#include "gdt.h"
+#include "idt.h"
+#include "pit.h"
+#include "pic.h"
 #include "../kernel.h"
 
-#define GDT_ENTRIES 5
-
+// Define GDT entries and pointer
 static gdt_entry_t gdt[GDT_ENTRIES];
 static gdt_ptr_t gp;
 
-// Cross-platform assembly support
+// Cross-platform assembly macros
 #ifdef _MSC_VER
     #define ASM __asm
 #else

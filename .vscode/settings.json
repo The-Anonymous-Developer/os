@@ -1,6 +1,16 @@
 {
     "files.associations": {
         "hardware.h": "c",
-        "kernel.h": "c"
+        "kernel.h": "c",
+        "display.h": "c",
+        "keyboard.h": "c",
+        "task.h": "c",
+        "string.h": "c",
+        "memory.h": "c",
+        "timer.h": "c",
+        "stddef.h": "c",
+        "stdint.h": "c",
+        "resource_predict.h": "c",
+        "resource_stats.h": "c"
     }
 }

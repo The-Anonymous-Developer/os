@@ -1,6 +1,9 @@
 #include <stdint.h>
 #include "../kernel.h"
 #include "../hardware/hardware.h"
+#include "../hardware/display.h"
+#include "../hardware/keyboard.h"
+#include "../process/task.h"
 
 
 // Function declarations
@@ -50,6 +53,12 @@ void kernel_main(void) {
     // Initialize system components
     init_system_components();
     
+    // Initialize display
+    display_init();
+    display_set_color(VGA_WHITE, VGA_BLUE);
+    display_write("OS Kernel Started\n");
+    display_write("Ready for input:\n");
+    
     // Enable interrupts
     #ifdef _MSC_VER
         __asm {
@@ -59,8 +68,14 @@ void kernel_main(void) {
         asm volatile ("sti");
     #endif
     
-    // Enter kernel main loop
+    // Main kernel loop
     while(1) {
+        // Process keyboard input
+        if (keyboard_available()) {
+            char c = keyboard_getchar();
+            display_putchar(c);
+        }
+        
         // Process scheduler tick
         schedule_next_task();
         
@@ -87,11 +102,18 @@ static void init_system_components(void) {
     
     // Initialize AI subsystem
     init_ai_system();
+    
+    // Initialize task system
+    task_init();
 }
 
 static void schedule_next_task(void) {
-    // AI-driven process scheduling
-    // Will be implemented in process manager
+    task_schedule();
+    task_t* current = task_current();
+    if (current) {
+        // Update AI system with task metrics
+        // TODO: Implement AI-driven scheduling
+    }
 }
 
 static void process_system_events(void) {
