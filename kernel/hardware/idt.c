@@ -115,6 +115,15 @@ void init_idt(void) {
     //         : "memory"
     //     );
     #endif
+
+    // Initialize interrupt handlers
+    init_interrupt_handlers();
+
+    // Configure PIC
+    pic_remap(IRQ_TIMER, IRQ_TIMER + 8);
+    
+    // Enable interrupts
+    STI();
 }
 
 static void set_idt_entry(uint8_t vector, uint64_t handler) {

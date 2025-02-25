@@ -1,11 +1,9 @@
 #include "timer.h"
-#include "pic.h"
-#include "interrupt.h"
 #include "ports.h"
-#include "cpu.h"
+#include "pic.h"
 #include "../process/task.h"
 
-static volatile uint32_t timer_ticks = 0;
+static volatile uint64_t timer_ticks = 0;
 
 // PIT (Programmable Interval Timer) ports
 #define PIT_CHANNEL0 0x40
@@ -22,10 +20,12 @@ void timer_handler(interrupt_frame_t* frame) {
     (void)frame;  // Unused parameter
     timer_ticks++;
     
-    // Task scheduling
-    if (timer_ticks % 10 == 0) {  // Every 10ms
+    // Schedule tasks every 10ms
+    if (timer_ticks % 10 == 0) {
         task_schedule();
     }
+    
+    pic_send_eoi(0);  // Timer is IRQ0
 }
 
 void timer_init(void) {
@@ -37,18 +37,14 @@ void timer_init(void) {
     outb(PIT_CHANNEL0, (divisor >> 8) & 0xFF); // High byte
     
     // Register timer interrupt handler at IRQ0 (INT 32)
-    register_interrupt_handler(IRQ0, timer_handler);
+    register_interrupt_handler(IRQ_TIMER, timer_handler);
     
     // Enable timer interrupt in PIC
     pic_unmask_irq(0);
 }
 
-uint32_t get_timer_ticks(void) {
+uint64_t get_timer_ticks(void) {
     return timer_ticks;
-}
-
-uint64_t get_system_ticks(void) {
-    return (uint64_t)timer_ticks;
 }
 
 void timer_wait(uint32_t ticks) {

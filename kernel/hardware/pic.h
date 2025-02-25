@@ -9,6 +9,9 @@
 #define PIC2_COMMAND    0xA0
 #define PIC2_DATA       0xA1
 
+// PIC commands
+#define PIC_EOI         0x20
+
 // Initialization Command Words (ICW)
 #define ICW1_ICW4       0x01    // ICW4 needed
 #define ICW1_SINGLE     0x02    // Single (cascade) mode
@@ -32,5 +35,7 @@ void init_pic(void);
 void pic_mask_irq(uint8_t irq);
 void pic_unmask_irq(uint8_t irq);
 void pic_send_eoi(uint8_t irq);
+void pic_remap(uint8_t offset1, uint8_t offset2);
+void pic_disable(void);
 
 #endif // PIC_H
