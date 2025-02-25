@@ -2,6 +2,7 @@
 #include "hardware.h"
 #include "interrupt.h"
 #include "timer.h"
+#include "cpu.h"
 #include <stddef.h>
 
 #define IDT_ENTRIES 256

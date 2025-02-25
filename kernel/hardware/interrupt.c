@@ -52,7 +52,7 @@ static const char* exception_messages[] = {
 static interrupt_handler_t interrupt_handlers[256] = { 0 };
 
 void register_interrupt_handler(uint8_t vector, interrupt_handler_t handler) {
-    if (vector < 256) {
+    if (vector < MAX_INTERRUPTS-1) {
         interrupt_handlers[vector] = handler;
     }
 }
@@ -104,6 +104,12 @@ void default_exception_handler(interrupt_frame_t* frame) {
     halt();
 }
 
+void keyboard_handler_wrapper(struct interrupt_frame* frame) {
+    (void)frame;
+    uint8_t scancode = inb(0x60);  // Read from keyboard port
+    keyboard_handler(scancode);
+}
+
 void init_interrupt_handlers(void) {
     // Register default handlers for CPU exceptions
     for (int i = 0; i < 32; i++) {
@@ -116,7 +122,7 @@ void init_interrupt_handlers(void) {
     register_interrupt_handler(INT_PROTECTION_FAULT, protection_fault_handler);
 
     // Note: Timer handler is now registered in timer_init()
-    register_interrupt_handler(IRQ_KEYBOARD, keyboard_handler);
+    register_interrupt_handler(IRQ_KEYBOARD, keyboard_handler_wrapper);
     register_interrupt_handler(IRQ_MOUSE, mouse_handler);
     register_interrupt_handler(IRQ_HARDDISK, harddisk_handler);
 }

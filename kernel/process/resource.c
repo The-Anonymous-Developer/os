@@ -5,6 +5,7 @@
 #include "resource_stats.h"
 #include "resource_defs.h"
 #include "resource.h"
+#include "../hardware/timer.h"
 
 static resource_t resources[MAX_RESOURCES];
 

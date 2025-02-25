@@ -7,8 +7,8 @@
 void write_cr3(uint64_t value);
 uint64_t read_cr3(void);
 uint64_t read_cr2(void);  // Added for page fault address
-void CLI(void);
-void STI(void);
-void halt(void);
+extern void CLI(void);
+extern void STI(void);
+extern void halt(void);
 
 #endif // CPU_H

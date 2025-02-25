@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include "resource_defs.h"
 
-#define MAX_RESOURCES 64
 #define RESOURCE_ALERT_THRESHOLD 80  // 80% usage triggers alert
 #define RESOURCE_HIGH_CONTENTION 5   // 5+ failed attempts indicates contention
 #define HISTORY_SIZE 60  // Keep last 60 samples

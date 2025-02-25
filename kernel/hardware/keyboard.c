@@ -2,6 +2,7 @@
 #include "ports.h"
 #include "../hardware/interrupt.h"
 #include "../lib/string.h"
+#include "../hardware/cpu.h"
 
 // Keyboard buffer
 static char keyboard_buffer[KEYBOARD_BUFFER_SIZE];
@@ -95,6 +96,12 @@ void keyboard_handler(uint8_t scancode) {
     }
 }
 
+void keyboard_handler_wrapper(struct interrupt_frame* frame) {
+    (void)frame;
+    uint8_t scancode = inb(0x60);  // Read from keyboard port
+    keyboard_handler(scancode);
+}
+
 char keyboard_getchar(void) {
     while (buffer_start == buffer_end) {
         // Wait for character
@@ -114,7 +121,7 @@ bool keyboard_available(void) {
 }
 
 void keyboard_init(void) {
-    register_interrupt_handler(33, keyboard_handler);  // IRQ1 = 33
+    register_interrupt_handler(IRQ_KEYBOARD, keyboard_handler_wrapper);  // IRQ1 = 33
     buffer_start = buffer_end = 0;
     shift_pressed = false;
     caps_lock = false;

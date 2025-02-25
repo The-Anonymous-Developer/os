@@ -5,7 +5,6 @@
 #include "task.h"
 #include "resource_defs.h"
 
-#define MAX_RESOURCES 256
 #define MAX_RESOURCE_NAME 32
 
 typedef struct {
@@ -23,5 +22,7 @@ void resource_acquire(uint32_t id);
 void resource_release(uint32_t id);
 void resource_release_all(task_t* task);
 bool resource_try_acquire(uint32_t id);
+void resource_release_all(task_t* task);
+
 
 #endif // RESOURCE_H

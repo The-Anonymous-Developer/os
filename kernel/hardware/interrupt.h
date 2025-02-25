@@ -1,5 +1,8 @@
 #ifndef INTERRUPT_H
 #define INTERRUPT_H
+#include "ports.h"
+#include "keyboard.h"
+
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -60,7 +63,7 @@ struct interrupt_frame;
 typedef void (*interrupt_handler_t)(struct interrupt_frame*);
 
 // Interrupt frame structure
-typedef struct {
+typedef struct interrupt_frame {
     uint64_t r15, r14, r13, r12, r11, r10, r9, r8;
     uint64_t rdi, rsi, rbp, rsp, rbx, rdx, rcx, rax;
     uint64_t int_no;     // Interrupt number
@@ -87,9 +90,9 @@ void page_fault_handler(interrupt_frame_t* frame);
 void double_fault_handler(interrupt_frame_t* frame);
 void protection_fault_handler(interrupt_frame_t* frame);
 void timer_handler(interrupt_frame_t* frame);
-void keyboard_handler(uint8_t scancode);
-void mouse_handler(interrupt_frame_t* frame);
-void harddisk_handler(interrupt_frame_t* frame);
+void keyboard_handler_wrapper(struct interrupt_frame* frame);
+void mouse_handler(struct interrupt_frame* frame);
+void harddisk_handler(struct interrupt_frame* frame);
 
 #ifdef _MSC_VER
 #pragma pack(pop)

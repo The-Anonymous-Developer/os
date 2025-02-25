@@ -74,5 +74,6 @@ void task_exit(int exit_code);
 void task_set_state(task_t* task, task_state_t new_state);
 bool task_can_transition(task_state_t from, task_state_t to);
 const char* task_state_name(task_state_t state);
+void task_switch(task_t* next);  // Declare it here!
 
 #endif // TASK_H

@@ -8,6 +8,7 @@
 #include "sync.h"
 #include "resource_stats.h"
 #include "resource_predict.h"
+#include "resource.h"
 
 // Task list and current task (make current_task visible to assembly)
 static task_t tasks[MAX_TASKS];

@@ -1,7 +1,9 @@
+#include "interrupt.h"
 #include "timer.h"
 #include "ports.h"
 #include "pic.h"
 #include "../process/task.h"
+#include "cpu.h"
 
 static volatile uint64_t timer_ticks = 0;
 
@@ -45,6 +47,10 @@ void timer_init(void) {
 
 uint64_t get_timer_ticks(void) {
     return timer_ticks;
+}
+
+uint64_t get_system_ticks(void) {
+    return get_timer_ticks();
 }
 
 void timer_wait(uint32_t ticks) {

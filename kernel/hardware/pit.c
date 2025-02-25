@@ -1,18 +1,10 @@
 #include "hardware.h"
-
-#define PIT_CHANNEL0    0x40    // Channel 0 data port
-#define PIT_CHANNEL1    0x41    // Channel 1 data port
-#define PIT_CHANNEL2    0x42    // Channel 2 data port
-#define PIT_COMMAND     0x43    // Mode/Command register
+#include "pit.h"
+#include "ports.h"
 
 // Base frequency of PIT is 1.193182 MHz
 #define PIT_FREQUENCY   1193182
 #define TIMER_FREQ      100    // 100 Hz = 10ms intervals
-
-// PIT command bits
-#define PIT_MODE2      0x34    // Rate Generator
-#define PIT_MODE3      0x36    // Square Wave Generator
-#define PIT_LATCH      0x00    // Latch count value command
 
 void init_pit(void) {
     // Calculate divisor for desired frequency
