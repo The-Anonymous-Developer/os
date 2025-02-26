@@ -191,3 +191,47 @@ char* itoa(int value, char* str, int base) {
 
     return str;
 }
+
+char* strtok_custom(char* str, const char* delim) {
+    static char* last = NULL;
+    if (str) last = str; // Start from the new string
+    if (!last) return NULL; // No more tokens
+
+    char* token_start = last;
+    
+    // Skip leading delimiters
+    while (*token_start && strchr(delim, *token_start)) {
+        token_start++;
+    }
+
+    if (!*token_start) { // No more tokens
+        last = NULL;
+        return NULL;
+    }
+
+    char* token_end = token_start;
+
+    // Find the next delimiter
+    while (*token_end && !strchr(delim, *token_end)) {
+        token_end++;
+    }
+
+    if (*token_end) { 
+        *token_end = '\0';  // Null-terminate the token
+        last = token_end + 1; // Move to the next part
+    } else {
+        last = NULL; // No more tokens
+    }
+
+    return token_start;
+}
+
+char* strchr(const char* str, int c) {
+    while (*str) {
+        if (*str == (char)c) {
+            return (char*)str;
+        }
+        str++;
+    }
+    return NULL;  // Return NULL if character is not found
+}

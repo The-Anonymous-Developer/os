@@ -7,7 +7,6 @@
 // Define IFS_MAGIC properly
 static const char IFS_MAGIC[IFS_MAGIC_LENGTH] = "INTELLISYSFILES";
 
-static ifs_superblock_t superblock;
 static int ifs_mounted = 0;
 
 int ifs_mount() {

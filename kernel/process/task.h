@@ -80,6 +80,10 @@ typedef struct task {
     struct task* waiting_tasks[MAX_TASKS]; // List of tasks waiting on this one
     uint32_t waiting_count;        // Number of tasks waiting
 
+    // 🔹 Add user and group information
+    uint32_t uid;  // User ID (owner of the task)
+    uint32_t gid;  // Group ID (owner's group)
+
     message_queue_t msg_queue;     // Task-specific message queue (IPC)
     cpu_registers_t registers;
 

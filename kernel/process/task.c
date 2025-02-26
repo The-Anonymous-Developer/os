@@ -54,15 +54,15 @@ task_t* task_create(void (*entry)(void), uint32_t priority, const char* name) {
     if (task_count >= MAX_TASKS) {
         return NULL;
     }
-    
+
     task_t* task = &tasks[task_count];
-    
+
     // Allocate stack memory
     task->stack = kmalloc(TASK_STACK_SIZE);
     if (!task->stack) {
         return NULL;
     }
-    
+
     task->pid = next_task_id++;
     task->base_priority = priority;
     task->current_priority = priority;
@@ -72,14 +72,24 @@ task_t* task_create(void (*entry)(void), uint32_t priority, const char* name) {
     task->ticks_remaining = get_time_slice(priority);
     task->total_ticks = 0;
     task->state = TASK_READY;
-    
+
+    // 🔹 Inherit UID and GID from the parent task (or default to root)
+    task_t* current = task_current();
+    if (current) {
+        task->uid = current->uid;
+        task->gid = current->gid;
+    } else {
+        task->uid = 0;  // Root user
+        task->gid = 0;  // Root group
+    }
+
     // Copy task name
     strncpy(task->name, name, TASK_NAME_LENGTH - 1);
     task->name[TASK_NAME_LENGTH - 1] = '\0';
-    
+
     // Setup stack (stack grows downward)
     uint64_t* stack = (uint64_t*)((uint8_t*)task->stack + TASK_STACK_SIZE);
-    
+
     // Push initial register values onto stack
     *(--stack) = 0x200;    // RFLAGS (interrupts enabled)
     *(--stack) = 0x08;     // CS
@@ -91,16 +101,17 @@ task_t* task_create(void (*entry)(void), uint32_t priority, const char* name) {
     *(--stack) = 0;        // RSI
     *(--stack) = 0;        // RDI
     *(--stack) = 0;        // RBP
-    
+
     task->rsp = (uint64_t)stack;
     task->cr3 = 0;  // Will be set up by memory management later
-    
+
     // Initialize message queue
     message_queue_init(&task->msg_queue, task);
-    
+
     task_count++;
     return task;
 }
+
 
 void context_switch(task_t* next) {
     if (!next || next == current_task) {

@@ -13,5 +13,8 @@ size_t strlen(const char* str);
 int sprintf_simple(char* buffer, const char* format, ...);
 int string_format(char *buffer, const char *fmt, ...);
 char* itoa(int value, char* str, int base);
+char* strtok_custom(char* str, const char* delim);
+char* strchr(const char* str, int c);
+
 
 #endif // STRING_H

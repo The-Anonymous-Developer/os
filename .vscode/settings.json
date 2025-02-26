@@ -19,6 +19,8 @@
         "scheduler.h": "c",
         "ifs.h": "c",
         "proc_mgmt.h": "c",
-        "heap.h": "c"
+        "heap.h": "c",
+        "ifs_everything.h": "c",
+        "typeinfo": "c"
     }
 }
