@@ -109,5 +109,5 @@ section .data
                  dw 'I',0,'n',0,'i',0,'t',0,'i',0,'a',0,'l',0,'i',0,'z',0,'e',0,'d',0
                  dw 13,0,10,0,0,0  ; CR, LF, NULL
 
-    kernel_path  db '\EFI\BOOT\kernel.elf',0
+    kernel_path  db '../build/bin/kernel.elf',0
     FileSystemGuid dq 0x0964e5b22, 0x6459f683, 0x64a2b4c5
