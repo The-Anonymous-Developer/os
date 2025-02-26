@@ -5,46 +5,55 @@
 #include "../hardware/display.h"
 #include "../hardware/cpu.h"
 #include "scheduler.h"
-#include "../filesystem/fs.h" // Placeholder for future file loading
+#include "../filesystem/ifs.h" // Filesystem for file loading
+#include "../lib/string.h"
 
 int exec(const char *path) {
     if (!path || !*path) {
-        display_write("exec: Invalid path\n");
+        display_write("[EXEC] Invalid path\n");
         return -1;
     }
 
-    display_write("Executing program: ");
+    display_write("[EXEC] Executing program: ");
     display_write(path);
     display_write("\n");
 
-    // Placeholder: Read binary from disk (filesystem integration required)
-    void *binary_data = load_file(path);
+    // Ensure load_file function is declared and used correctly
+    void *binary_data = load_file(path); 
     if (!binary_data) {
-        display_write("exec: Failed to load file\n");
+        display_write("[EXEC] Failed to load file\n");
         return -1;
     }
 
     // Create a new process
-    task_t *new_task = create_task();
+    task_t *new_task = task_create(NULL, PRIORITY_NORMAL, "NewProcess");
     if (!new_task) {
-        display_write("exec: Task creation failed\n");
+        display_write("[EXEC] Task creation failed\n");
         return -1;
     }
 
     // Allocate memory for the process
-    new_task->memory = alloc_memory_for_task(new_task);
-    if (!new_task->memory) {
-        display_write("exec: Memory allocation failed\n");
-        destroy_task(new_task);
+    new_task->code_segment = alloc_memory_for_task(new_task);
+    if (!new_task->code_segment) {
+        display_write("[EXEC] Memory allocation failed\n");
+        task_exit(-1);
+        return -1;
+    }
+
+    // Ensure get_file_size() is declared and implemented
+    size_t file_size = get_file_size(path);
+    if (file_size == 0) {
+        display_write("[EXEC] File size is zero, aborting execution\n");
+        task_exit(-1);
         return -1;
     }
 
     // Load executable into allocated memory
-    memcpy(new_task->memory->code_segment, binary_data, get_file_size(path));
+    memcpy(new_task->code_segment, binary_data, file_size);
 
-    // Set up stack pointer, instruction pointer (entry point)
-    new_task->registers.rip = (uint64_t)new_task->memory->code_segment;
-    new_task->registers.rsp = (uint64_t)new_task->memory->stack_top;
+    // Set up execution context
+    new_task->registers.rip = (uint64_t)new_task->code_segment;
+    new_task->registers.rsp = (uint64_t)new_task->stack_top;
 
     // Add to scheduler
     schedule_task(new_task);

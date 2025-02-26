@@ -16,6 +16,8 @@
         "cpu.h": "c",
         "interrupt.h": "c",
         "stdbool.h": "c",
-        "scheduler.h": "c"
+        "scheduler.h": "c",
+        "ifs.h": "c",
+        "proc_mgmt.h": "c"
     }
 }

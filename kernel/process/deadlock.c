@@ -35,7 +35,7 @@ static bool has_cycle(task_t* task, uint32_t task_id) {
         
         task_t* blocking_task = task->blocked_by;
         if (blocking_task) {
-            uint32_t blocking_id = blocking_task->id;
+            uint32_t blocking_id = blocking_task->pid;
             if (!state.visited[blocking_id]) {
                 if (has_cycle(blocking_task, blocking_id)) {
                     return true;
@@ -58,7 +58,7 @@ bool deadlock_detect(task_t* task) {
         state.recursion_stack[i] = false;
     }
     
-    return has_cycle(task, task->id);
+    return has_cycle(task, task->pid);
 }
 
 bool deadlock_would_cause(task_t* task, task_t* resource_owner) {
@@ -83,7 +83,7 @@ void deadlock_print_state(void) {
         if (state.wait_for_graph[i]) {
             char buf[64];
             sprintf_simple(buf, "Task %d waiting for Task %d\n", 
-                         i, state.wait_for_graph[i]->id);
+                         i, state.wait_for_graph[i]->pid);
             display_write(buf);
         }
     }
@@ -92,8 +92,8 @@ void deadlock_print_state(void) {
 void deadlock_resource_acquired(task_t* task, uint32_t resource_id) {
     if (!task || resource_id >= MAX_RESOURCES) return;
     
-    graph.request[task->id][resource_id] = false;
-    graph.allocation[task->id][resource_id] = true;
+    graph.request[task->pid][resource_id] = false;
+    graph.allocation[task->pid][resource_id] = true;
     
     if (resource_id >= graph.resource_count) {
         graph.resource_count = resource_id + 1;
@@ -103,5 +103,5 @@ void deadlock_resource_acquired(task_t* task, uint32_t resource_id) {
 void deadlock_resource_released(task_t* task, uint32_t resource_id) {
     if (!task || resource_id >= MAX_RESOURCES) return;
     
-    graph.allocation[task->id][resource_id] = false;
+    graph.allocation[task->pid][resource_id] = false;
 }

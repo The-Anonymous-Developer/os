@@ -63,7 +63,7 @@ task_t* task_create(void (*entry)(void), uint32_t priority, const char* name) {
         return NULL;
     }
     
-    task->id = next_task_id++;
+    task->pid = next_task_id++;
     task->base_priority = priority;
     task->current_priority = priority;
     task->priority = priority;

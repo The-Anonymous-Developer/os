@@ -5,7 +5,6 @@
 #include "../hardware/timer.h"
 #include "../memory/memory.h"
 #include "../lib/string.h"
-
 #include <stdint.h>
 #include <stdbool.h>
 #include "message_types.h"
@@ -13,9 +12,7 @@
 // Task configuration
 #define MAX_TASKS 64
 #define TASK_NAME_LENGTH 32
-
-// Add stack size constant
-#define TASK_STACK_SIZE 4096
+#define TASK_STACK_SIZE 4096 // Stack size per task
 
 // Task priorities
 #define PRIORITY_HIGH    0
@@ -40,28 +37,52 @@ typedef enum task_state {
     TASK_DEAD = 6        // Task fully terminated
 } task_state_t;
 
-// Task structure
+// CPU registers structure (used for saving/restoring context)
+typedef struct cpu_registers {
+    uint64_t rax, rbx, rcx, rdx;
+    uint64_t rsi, rdi, rbp, rsp;
+    uint64_t r8, r9, r10, r11, r12, r13, r14, r15;
+    uint64_t rip, rflags;
+    uint64_t cr3;
+    uint64_t cs, ss;
+} cpu_registers_t;
+
+// Task structure (Process Control Block)
 typedef struct task {
-    uint64_t rsp;                    // Stack pointer
-    uint32_t id;                     // Task ID
-    task_state_t state;              // Current state
-    uint32_t base_priority;          // Base priority level
-    uint32_t current_priority;       // Current priority (for inheritance)
-    uint32_t priority;               // Scheduling priority
-    uint32_t ticks_remaining;        // Time slice remaining
-    uint32_t total_ticks;           // Total execution ticks
-    uint64_t run_start_time;        // Last time task started running
-    uint64_t total_runtime;         // Total running time
-    int32_t exit_code;              // Task exit code
-    char name[TASK_NAME_LENGTH];     // Task name
-    void* stack;                     // Stack pointer
-    uint64_t cr3;                    // Page directory base
-    struct task* next;               // Next task in list
-    struct task* parent;             // Parent task
-    struct task* blocked_by;         // Task holding needed resource
-    struct task* waiting_tasks[MAX_TASKS]; // Tasks waiting on this
-    uint32_t waiting_count;          // Number of waiting tasks
-    message_queue_t msg_queue;       // Message queue
+    uint64_t pid;                // Process ID
+    uint64_t rsp;
+    uint64_t cr3;
+    char name[TASK_NAME_LENGTH];  // Task name
+
+    cpu_registers_t cpu_state;    // CPU context for this task
+    uint64_t stack_top;           // Stack top pointer for the task
+    uint64_t code_segment;        // Code segment selector (if needed for segmentation)
+    
+    task_state_t state;           // Current task state
+    uint64_t page_table;          // CR3 (Page Table Address) for virtual memory
+
+    struct task* next;            // Next task in linked list (for scheduling)
+    struct task* prev;            // Previous task in list (if doubly linked)
+
+    int32_t exit_code;            // Exit code for the task
+    uint64_t run_start_time;      // Last time task started running
+    uint64_t total_runtime;       // Total running time
+    
+    uint32_t base_priority;       // Base priority level
+    uint32_t current_priority;    // Dynamic priority (can change)
+    uint32_t priority;            // Effective priority (used for scheduling)
+    uint32_t ticks_remaining;     // Time slice remaining
+    uint32_t total_ticks;         // Total execution ticks
+
+    void* stack;                  // Pointer to allocated stack
+    struct task* parent;           // Parent task (if applicable)
+    struct task* blocked_by;       // Task currently blocking this task
+    struct task* waiting_tasks[MAX_TASKS]; // List of tasks waiting on this one
+    uint32_t waiting_count;        // Number of tasks waiting
+
+    message_queue_t msg_queue;     // Task-specific message queue (IPC)
+    cpu_registers_t registers;
+
 } task_t;
 
 // Function declarations
@@ -74,6 +95,6 @@ void task_exit(int exit_code);
 void task_set_state(task_t* task, task_state_t new_state);
 bool task_can_transition(task_state_t from, task_state_t to);
 const char* task_state_name(task_state_t state);
-void task_switch(task_t* next);  // Declare it here!
+void task_switch(task_t* next);  // Declare task switching function
 
 #endif // TASK_H
