@@ -108,9 +108,9 @@ $(BUILD_DIR)/%.obj: %.asm
 	$(NASM) -f win64 $< -o $@
 
 # Kernel rules
-kernel: $(BIN_DIR)/kernel.elf
+kernel: $(BIN_DIR)/kernel.bin
 
-$(BIN_DIR)/kernel.elf: $(KERNEL_OBJECTS)
+$(BIN_DIR)/kernel.bin: $(KERNEL_OBJECTS)
 	$(CC) $(KERNEL_CFLAGS) $(KERNEL_LDFLAGS) -T $(KERNEL_DIR)/linker.ld $^ -o $@
 
 $(KERNEL_BUILD_DIR)/%.o: $(KERNEL_DIR)/%.c
@@ -193,7 +193,7 @@ KERNEL_ASM_OBJECTS = $(KERNEL_ASM_SOURCES:$(KERNEL_DIR)/%.asm=$(KERNEL_BUILD_DIR
 KERNEL_OBJECTS = $(KERNEL_C_OBJECTS) $(KERNEL_ASM_OBJECTS)
 
 # Single kernel build rule
-$(BIN_DIR)/kernel.elf: $(KERNEL_OBJECTS)
+$(BIN_DIR)/kernel.bin: $(KERNEL_OBJECTS)
 	$(CC) $(KERNEL_CFLAGS) $(KERNEL_LDFLAGS) -T $(KERNEL_DIR)/linker.ld $^ -o $@
 
 # C source compilation rule
