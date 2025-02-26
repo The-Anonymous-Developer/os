@@ -20,6 +20,26 @@ typedef struct {
     uint32_t journal_state; // Journaling state (clean/dirty)
 } ifs_superblock_t;
 
+typedef struct {
+    uint64_t inode_id;                 //inode identifier
+    uint32_t type;                     //directory or file
+    uint32_t permissions;              // read, write, execute flags
+    uint64_t size;                     // file syze (bytes)
+    uint64_t created_time;             // time of creation
+    uint64_t modified_time;            // time of last modification
+    uint64_t accessed_time;            // last accessed timestamp
+    uint32_t hard_links;               // number of points linking to this inode
+    uint32_t uid;                      // owner of file (eg. user/system) id
+    uint32_t gid;                      // group id
+    uint32_t block_count;              // number of blocks used
+    uint64_t direct_blocks[12];        // direct data block pointers
+    uint64_t indirect_block;           // point to single indirect data block
+    uint64_t double_indirect_block;   // point to double indirect data block
+    uint64_t triple_indirect_block;   // point to triple indirect data block
+    uint32_t flags;                     // special flags (eg. sys, hidden files, etc.)
+    uint32_t reserved[5];               // reserved for future use
+} ifs_inode_t;
+
 // Functions
 int ifs_mount();
 void ifs_journal_recovery();

@@ -59,3 +59,4 @@ void timer_wait(uint32_t ticks) {
         halt();
     }
 }
+
