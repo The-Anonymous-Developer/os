@@ -52,3 +52,31 @@ int ifs_mount() {
     display_write("[IFS] Filesystem mounted successfully!\n");
     return 0;
 }
+
+/* --------------------------------------------------------------------------------------------------------------------------------------------- */
+// TO BE IMPLEMENTED AS OF 26/02/2025!!!!!!
+
+void* load_file(const char* path) {
+    display_write("[IFS] load_file() not implemented yet!\n");
+    return NULL;
+}
+
+size_t get_file_size(const char* path) {
+    display_write("[IFS] get_file_size() not implemented yet!\n");
+    return 0; // Placeholder
+}
+
+int detect_ifs_disk() {
+    display_write("[IFS] detect_ifs_disk() not implemented yet!\n");
+    return -1; // No IFS disk found
+}
+
+void ifs_journal_recovery() {
+    display_write("[IFS] ifs_journal_recovery() not implemented yet!\n");
+}
+
+int load_root_directory() {
+    display_write("[IFS] load_root_directory() not implemented yet!\n");
+    return 0; // Simulating failure for now
+}
+

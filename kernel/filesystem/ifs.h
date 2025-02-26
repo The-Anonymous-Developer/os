@@ -24,9 +24,11 @@ typedef struct {
 int ifs_mount();
 void ifs_journal_recovery();
 int load_root_directory();
-
+int detect_ifs_disk();
 
 void* load_file(const char* path);  // Function to read a file into memory
 size_t get_file_size(const char* path);  // Function to get file size
+
+
 
 #endif // IFS_H

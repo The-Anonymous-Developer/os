@@ -18,6 +18,7 @@
         "stdbool.h": "c",
         "scheduler.h": "c",
         "ifs.h": "c",
-        "proc_mgmt.h": "c"
+        "proc_mgmt.h": "c",
+        "heap.h": "c"
     }
 }

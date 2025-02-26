@@ -5,5 +5,7 @@
 
 void schedule();
 void schedule_task(task_t* task);
+void add_task_to_queue(task_t* task);
+
 
 #endif // SCHEDULER_H

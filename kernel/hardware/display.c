@@ -71,3 +71,10 @@ void display_write(const char* str) {
 void display_set_color(uint8_t fg, uint8_t bg) {
     vga_color = fg | (bg << 4);
 }
+
+void display_write_number(int num) {
+    // Placeholder implementation (convert number to string)
+    char buffer[16];itoa
+    (num, buffer, 10); // Convert number to string
+    display_write(buffer);
+}

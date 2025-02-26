@@ -12,5 +12,6 @@ char* strncpy(char* dest, const char* src, size_t n);
 size_t strlen(const char* str);
 int sprintf_simple(char* buffer, const char* format, ...);
 int string_format(char *buffer, const char *fmt, ...);
+char* itoa(int value, char* str, int base);
 
 #endif // STRING_H

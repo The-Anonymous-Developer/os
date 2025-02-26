@@ -1,4 +1,6 @@
 #include "memory.h"
+#include "heap.h"
+#include "../process/task.h"
 
 #define HEAP_SIZE (1024 * 1024)  // 1MB heap
 
@@ -30,4 +32,17 @@ void* kmalloc(size_t size) {
 
 void kfree(void* ptr) {
     (void)ptr;  // TODO: Implement proper free
+}
+
+void* alloc_memory_for_task(task_t* task) {
+    if (!task) return NULL;
+    
+    task->code_segment = kmalloc(TASK_STACK_SIZE); // Allocate executable memory
+    task->stack_top = (uint8_t*)kmalloc(TASK_STACK_SIZE) + TASK_STACK_SIZE; // Allocate stack memory
+
+    if (!task->code_segment || !task->stack_top) {
+        return NULL; // Allocation failure
+    }
+
+    return task->code_segment;
 }

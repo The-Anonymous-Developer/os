@@ -31,6 +31,7 @@ void display_init(void);
 void display_clear(void);
 void display_putchar(char c);
 void display_write(const char* str);
+void display_write_number(int num);
 void display_set_color(uint8_t fg, uint8_t bg);
 
 #endif // DISPLAY_H
