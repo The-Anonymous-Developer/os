@@ -1,0 +1,3 @@
+gCommandLineDefines: {'ARCH': 'X64'}
+BuildOptionPcd: []
+Active Platform: /mnt/c/users/aayan/desktop/os/edk2/SystemBootloader/SystemBootloader.dsc

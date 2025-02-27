@@ -1,0 +1,15 @@
+
+
+-include /mnt/c/users/aayan/desktop/os/edk2/Build/SystemBootloader/DEBUG_GCC5/X64/MdePkg/Library/UefiLib/UefiLib/OUTPUT/Acpi.obj.deps
+
+-include /mnt/c/users/aayan/desktop/os/edk2/Build/SystemBootloader/DEBUG_GCC5/X64/MdePkg/Library/UefiLib/UefiLib/OUTPUT/Console.obj.deps
+
+-include /mnt/c/users/aayan/desktop/os/edk2/Build/SystemBootloader/DEBUG_GCC5/X64/MdePkg/Library/UefiLib/UefiLib/OUTPUT/UefiDriverModel.obj.deps
+
+-include /mnt/c/users/aayan/desktop/os/edk2/Build/SystemBootloader/DEBUG_GCC5/X64/MdePkg/Library/UefiLib/UefiLib/OUTPUT/UefiLib.obj.deps
+
+-include /mnt/c/users/aayan/desktop/os/edk2/Build/SystemBootloader/DEBUG_GCC5/X64/MdePkg/Library/UefiLib/UefiLib/OUTPUT/UefiLibPrint.obj.deps
+
+-include /mnt/c/users/aayan/desktop/os/edk2/Build/SystemBootloader/DEBUG_GCC5/X64/MdePkg/Library/UefiLib/UefiLib/OUTPUT/UefiNotTiano.obj.deps
+
+               
