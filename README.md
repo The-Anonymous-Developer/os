@@ -3,8 +3,8 @@
 ## Core Components
 ```
 /
-├── bootloader/           # UEFI + Legacy BIOS bootloader
-├── kernel/              # Monolithic kernel source
+├── bootloader/           # UEFI x86-64 bootloader
+├── kernel/              # Monolithic kernel source 
 │   ├── core/           # Core kernel functionality
 │   ├── memory/         # Memory management
 │   ├── process/        # Process management + AI scheduler
