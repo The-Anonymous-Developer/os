@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "efi.h": "c",
+        "efilib.h": "c",
+        "stdint.h": "c"
+    }
+}
